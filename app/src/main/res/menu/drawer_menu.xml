@@ -18,4 +18,18 @@
         </menu>
     </item>
 
+    <item
+        android:title="Other">
+        <menu>
+            <item android:title="Logout"
+                android:id="@+id/logout"/>
+
+
+
+
+
+
+        </menu>
+    </item>
+
 </menu>

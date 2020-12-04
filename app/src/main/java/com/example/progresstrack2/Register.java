@@ -5,7 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.TextUtils;
+import android.util.Patterns;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -17,80 +17,119 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.FirebaseDatabase;
 
-public class Register extends AppCompatActivity {
+public class Register extends AppCompatActivity implements View.OnClickListener {
 
-    EditText email, pass, conPass;
-    Button regist;
-    TextView loginClick;
-    FirebaseAuth fAuth;
-    ProgressBar progressBar;
+    private TextView log;
+    private EditText name,email,pass;
+    private ProgressBar progressBar;
+    private Button register;
 
+    private FirebaseAuth mAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
 
-        email=findViewById(R.id.edEmail);
-        pass=findViewById(R.id.edPassword);
-        conPass=findViewById(R.id.edConPass);
-        regist=findViewById(R.id.btRegister);
-        loginClick=findViewById(R.id.tvLogin);
+        mAuth = FirebaseAuth.getInstance();
 
-        fAuth=FirebaseAuth.getInstance();
-        progressBar=findViewById(R.id.progressBar);
+        register=(Button) findViewById(R.id.btRegister);
+        register.setOnClickListener(this);
 
-        if(fAuth.getCurrentUser()!=null){
-            startActivity(new Intent(getApplicationContext(),MainActivity.class));
-            finish();
+        name=(EditText) findViewById(R.id.edName);
+        email=(EditText)findViewById(R.id.edEmail);
+        pass=(EditText)findViewById(R.id.edPassword);
+
+        log=(TextView)findViewById(R.id.tvLogin);
+        log.setOnClickListener(this);
+
+        progressBar=(ProgressBar)findViewById(R.id.progressBar);
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()){
+            case R.id.tvLogin:
+                startActivity(new Intent(this, Login.class));
+                break;
+            case R.id.btRegister:
+                registeruser();
+                break;
+
         }
 
-        regist.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String emailidd = email.getText().toString().trim();
-                String password = pass.getText().toString().trim();
-                //String conPassword=conPass.getText().toString().trim();
+    }
 
-                if (TextUtils.isEmpty(emailidd)) {
-                    email.setError("Email is required.");
-                }
-                if (TextUtils.isEmpty(password)) {
-                    pass.setError("Password is required.");
-                    return;
-                }
-                /*if (TextUtils.isEmpty(conPassword)) {
-                    pass.setError("Confirm Password is required.");
-                    return;
-                }*/
-                if (password.length() < 6) {
-                    pass.setError("Password must be more than 6 characters");
-                }
-                /*if(password!=conPassword)
-                {
-                    pass.setError("Password and confirm password doesn't match");
-                }*/
-                progressBar.setVisibility(View.VISIBLE);
+    private void registeruser() {
+        final String nameEdit=name.getText().toString().trim();
+        final String emailEdit=email.getText().toString().trim();
+        final String passEdit=pass.getText().toString().trim();
 
-                fAuth.createUserWithEmailAndPassword(emailidd, password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+        if(nameEdit.isEmpty()) {
+            name.setError("Name is required");
+            name.requestFocus();
+            return;
+        }
+        if(emailEdit.isEmpty()){
+            email.setError("Email is required");
+            email.requestFocus();
+            return;
+        }
+        if(!Patterns.EMAIL_ADDRESS.matcher(emailEdit).matches()) {
+            email.setError("Please enter a valid email address");
+            email.requestFocus();
+            return;
+        }
+        if(passEdit.isEmpty()){
+            pass.setError("Password is required");
+            pass.requestFocus();
+            return;
+        }
+        if(passEdit.length()<6){
+            pass.setError("Min password length should be 6 characters");
+            pass.requestFocus();
+            return;
+
+        }
+
+        progressBar.setVisibility(View.VISIBLE);
+
+        mAuth.createUserWithEmailAndPassword(emailEdit,passEdit)
+                .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                      if(task.isSuccessful())
                      {
-                         Toast.makeText(Register.this, "User created.", Toast.LENGTH_SHORT).show();
-                         startActivity(new Intent(getApplicationContext(),MainActivity.class));
+                         User user = new User(nameEdit, emailEdit, passEdit);
+
+                         FirebaseDatabase.getInstance().getReference("Users")
+                                 .child(FirebaseAuth.getInstance().getCurrentUser().getUid())
+                                 .setValue(user).addOnCompleteListener(new OnCompleteListener<Void>() {
+                             @Override
+                             public void onComplete(@NonNull Task<Void> task) {
+                                 if(task.isSuccessful()){
+                                     Toast.makeText(Register.this,"User has been registered successfully",Toast.LENGTH_LONG).show();
+                                     progressBar.setVisibility(View.GONE); //user got registered
+
+                                     //redirect to login layout
+                                 }else{
+                                     Toast.makeText(Register.this, "Failed to register", Toast.LENGTH_LONG).show();
+                                     progressBar.setVisibility(View.GONE);
+                                 }
+                             }
+                         });
 
                      }else{
-                         Toast.makeText(Register.this, "Error : "+ task.getException().getMessage(),Toast.LENGTH_SHORT).show();
-
+                         Toast.makeText(Register.this, "Failed to register", Toast.LENGTH_LONG).show();
+                         progressBar.setVisibility(View.GONE);
                      }
                     }
                 });
-            }
 
 
-        });
+
 
     }
 }
