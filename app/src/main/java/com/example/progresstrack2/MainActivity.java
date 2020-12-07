@@ -63,6 +63,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         fragmentTransaction.add(R.id.container_fragment,new MainFragment());
         fragmentTransaction.commit();
 
+
+        Intent intent=getIntent();
+        String str=intent.getStringExtra("phone");
+
     }
 
     @Override
@@ -117,13 +121,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch(item.getItemId()){
             case R.id.item1:
-                //addTopic();
+                //startActivity(new Intent(this, Add.class));
                 Toast.makeText(this,"Item 1 selected",Toast.LENGTH_SHORT).show();
                 return true;
+                //break;
             case R.id.item2:
-                Toast.makeText(this,"Item 2 selected",Toast.LENGTH_SHORT).show();
-                return true;
+                //Toast.makeText(this,"Item 2 selected",Toast.LENGTH_SHORT).show();
+                //return true;
+                startActivity(new Intent(this, Add.class));
+                break;
             case R.id.item3:
+
                 Toast.makeText(this,"Item 3 selected",Toast.LENGTH_SHORT).show();
                 return true;
 
@@ -131,7 +139,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return super.onOptionsItemSelected(item);
     }
 
-    /*private void addTopic() {
+    private void addTopic() {
 
-    }*/
+    }
+
+
 }

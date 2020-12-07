@@ -17,16 +17,20 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 public class Register extends AppCompatActivity implements View.OnClickListener {
 
     private TextView log;
-    private EditText name,email,pass;
+    EditText name,email,pass,phn;
     private ProgressBar progressBar;
     private Button register;
 
     private FirebaseAuth mAuth;
+
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,6 +45,7 @@ public class Register extends AppCompatActivity implements View.OnClickListener 
         name=(EditText) findViewById(R.id.edName);
         email=(EditText)findViewById(R.id.edEmail);
         pass=(EditText)findViewById(R.id.edPassword);
+        phn=(EditText)findViewById(R.id.edPhone);
 
         log=(TextView)findViewById(R.id.tvLogin);
         log.setOnClickListener(this);
@@ -66,6 +71,7 @@ public class Register extends AppCompatActivity implements View.OnClickListener 
         final String nameEdit=name.getText().toString().trim();
         final String emailEdit=email.getText().toString().trim();
         final String passEdit=pass.getText().toString().trim();
+        final String phnEdit=phn.getText().toString().trim();
 
         if(nameEdit.isEmpty()) {
             name.setError("Name is required");
@@ -93,6 +99,18 @@ public class Register extends AppCompatActivity implements View.OnClickListener 
             return;
 
         }
+        if(phnEdit.isEmpty()){
+            phn.setError("Phone number is required");
+            phn.requestFocus();
+            return;
+        }
+        if(phnEdit.length()!=10){
+            phn.setError("Phone number should have 10 digits");
+            phn.requestFocus();
+            return;
+        }
+
+
 
         progressBar.setVisibility(View.VISIBLE);
 
@@ -102,7 +120,15 @@ public class Register extends AppCompatActivity implements View.OnClickListener 
                     public void onComplete(@NonNull Task<AuthResult> task) {
                      if(task.isSuccessful())
                      {
-                         User user = new User(nameEdit, emailEdit, passEdit);
+                         FirebaseDatabase rootNode=FirebaseDatabase.getInstance();
+                         DatabaseReference reference=rootNode.getReference("Users");
+                         //storeNewUserData();
+                         User user = new User(nameEdit, emailEdit, passEdit, phnEdit);
+                         reference.child(phnEdit).setValue(user);
+
+                         /*Intent i=new Intent(getApplicationContext(),Add.class);
+                         i.putExtra("phone",phnEdit);
+                         startActivity(i);*/
 
                          FirebaseDatabase.getInstance().getReference("Users")
                                  .child(FirebaseAuth.getInstance().getCurrentUser().getUid())
@@ -113,11 +139,21 @@ public class Register extends AppCompatActivity implements View.OnClickListener 
                                      Toast.makeText(Register.this,"User has been registered successfully",Toast.LENGTH_LONG).show();
                                      progressBar.setVisibility(View.GONE); //user got registered
 
+
+                                     Intent i=new Intent(getApplicationContext(),MainActivity.class);
+
+                                     //i.putExtra("phone",phnEdit);
+                                     startActivity(i);
+
+
+
+
                                      //redirect to login layout
                                  }else{
                                      Toast.makeText(Register.this, "Failed to register", Toast.LENGTH_LONG).show();
                                      progressBar.setVisibility(View.GONE);
                                  }
+
                              }
                          });
 
@@ -132,4 +168,14 @@ public class Register extends AppCompatActivity implements View.OnClickListener 
 
 
     }
+
+   /* private void storeNewUserData() {
+        FirebaseDatabase rootNode=FirebaseDatabase.getInstance();
+        DatabaseReference reference=rootNode.getReference("Users");
+
+        //DatabaseReference reference=FirebaseDatabase.getInstance().getReference();
+
+        User user = new User(nameEdit, emailEdit, passEdit, phnEdit);
+
+    }*/
 }
