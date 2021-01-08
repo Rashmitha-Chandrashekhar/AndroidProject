@@ -1,2 +1,2 @@
 include ':app'
-rootProject.name = "ProgressTrack2"
+rootProject.name='SqliteTutorial'
